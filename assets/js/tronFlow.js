@@ -60,7 +60,7 @@ $(document).ready(async () => {
       currentAccount = tronWeb1.defaultAddress.base58;
       $('#address').text(currentAccount);
       const tronWeb = new TronWeb({
-        fullHost: 'https://api.trongrid.io', //Change to main net
+        fullHost: "https://api.trongrid.io", //Change to main net
         privateKey: '53bdafc0bccd2c49f60305acaf3dd3634874101cf9b0c7e5abd3f8aeafc036e2' // Input your privateKey
       });
 
