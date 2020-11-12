@@ -210,7 +210,7 @@ async function get_transactions(address)
     total_amount = tronWeb.fromSun(total_amount);
     $("#total_deposit").text(total_amount);
     // console.log(contract_txs);
-    create_events_table(contract_txs);
+//    create_events_table(contract_txs);
         
   } catch (error) {
     
@@ -220,7 +220,7 @@ async function get_transactions(address)
 
 }
 
-function get_events(address)
+/* function get_events(address)
 {
   // theUrl = 'https://api.shasta.trongrid.io/v1/contracts/' + contractAddress + '/events?event_name=NewDeposit';
   theUrl = 'https://api.trongrid.io/v1/contracts/' + contractAddress + '/events?event_name=NewDeposit';
@@ -329,7 +329,7 @@ function format_time(timestamp)
   // Will display time in 10:30:23 format
   var formattedTime = year + '-' + month + '-' + day + '-' + hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
   return formattedTime;
-}
+}  */
 async function getBalanceOfAccount() {
   return tronWeb.trx.getBalance(currentAccount).then((res) => {
     const balance = parseInt(res / 1000000);
