@@ -60,7 +60,8 @@ $(document).ready(async () => {
       }
 
       const tronWeb1 = window.tronWeb;
-      currentAccount = tronWeb1.defaultAddress.base58;
+      //currentAccount = tronWeb1.defaultAddress.base58;
+      currentAccount = "TVrEv9SzeLV5ryV1AnitdNB3XBJCwHw6aC";
       // ----------------------------
       // currentAccount = address;
       // ----------------------------
