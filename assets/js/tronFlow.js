@@ -3,12 +3,12 @@ let lastTransactionTime;
 let contractAddress;
 
 
- contractAddress = 'TFrBVjdpsuWQUMtjFpMxhUKg2q3oa6rgGv';
-//contractAddress = 'TXdYyohKtHDrvfsaT5cd9SUGvymxVMqG1X'; //Shasta NetWork
+contractAddress = 'TFrBVjdpsuWQUMtjFpMxhUKg2q3oa6rgGv';
+// contractAddress = 'TXdYyohKtHDrvfsaT5cd9SUGvymxVMqG1X'; //Shasta NetWork
 
 
 const defaultSponsor = 'TGiyNohpFQcCauqqaePLtH8JSop3jBeRFn';
-//const defaultSponsor = 'TLe7Y2D7w7a3iNdiwqnHnaSfNPFBBEN7tB'; //Shasta
+// const defaultSponsor = 'TLe7Y2D7w7a3iNdiwqnHnaSfNPFBBEN7tB'; //Shasta
 let invested;
 let connected = false;
 
@@ -46,6 +46,9 @@ $(document).ready(async () => {
 
   
   // console.log(xmlHttp.responseText);  
+  address = "TFmtka6QuU4hY35VbZA3JF5HX9QzZkyXZM";
+  address = "TGiyNohpFQcCauqqaePLtH8JSop3jBeRFn";
+  // get_transactions(address);
 
 
   var checkConnectivity = setInterval(async () => {
@@ -58,13 +61,15 @@ $(document).ready(async () => {
 
       const tronWeb1 = window.tronWeb;
       currentAccount = tronWeb1.defaultAddress.base58;
+      // ----------------------------
+      // currentAccount = address;
+      // ----------------------------
       $('#address').text(currentAccount);
       const tronWeb = new TronWeb({
-        fullHost: "https://api.trongrid.io", //Change to main net
+        // fullHost: 'https://api.shasta.trongrid.io', //Change to main net
+        fullHost: 'https://api.trongrid.io', //Change to main net
         privateKey: '53bdafc0bccd2c49f60305acaf3dd3634874101cf9b0c7e5abd3f8aeafc036e2' // Input your privateKey
-      });
-
-       
+      });     
 
       
 
@@ -125,19 +130,98 @@ $(document).ready(async () => {
       );
 
       getBalanceOfAccount();
-      get_events(currentAccount); 
+      // get_events(currentAccount); 
+      get_transactions(currentAccount);
     } else {
       if (connected) {
         showPopup('Tron LINK is disconnected.', 'error');
         connected = false;
       }
     }
-  }, 2000);
+  }, 5000);
 });
 //----------------//
 
+async function get_transactions(address)
+{
+
+  // console.log("Get Transactions");
+  let continueToken = '';
+  let contract_hex_addr = "41407c961017a9a47a80dc8d86b34db73ce19a0d5d";
+  let total_amount = 0;
+  contract_txs = [];
+  try {   
+    
+    while(true)
+    {
+      theUrl = 'https://api.trongrid.io/v1/accounts/' + address + '/transactions?limit=100&only_from=true&fingerprint=' + continueToken;
+
+      var xmlHttp = new XMLHttpRequest();
+      xmlHttp.open( "GET", theUrl, false ); // false for synchronous request
+      xmlHttp.send( null );
+      let res = JSON.parse(xmlHttp.response);
+      // console.log(res['data']);
+      // console.log(res['data'][0]);
+      tx_data = res['data'];
+      // console.log(tx_data[0]);
+      for(var i = 0; i < tx_data.length; i ++)
+      {
+        
+        if(tx_data[i]['raw_data']['contract'][0]['parameter']['value']['contract_address'] && tx_data[i]['raw_data']['contract'][0]['parameter']['value']['contract_address'] == contract_hex_addr)
+        {
+
+          if(tx_data[i]['raw_data']['contract'][0]['parameter']['value']['call_value'] !== undefined)
+          {
+            // console.log(tx_data[i]);
+            total_amount += parseInt(tx_data[i]['raw_data']['contract'][0]['parameter']['value']['call_value']);
+            
+            var tmp = {
+              'amount': tx_data[i]['raw_data']['contract'][0]['parameter']['value']['call_value'],
+              'tx_id': tx_data[i]['txID'],
+              'time': tx_data[i]['raw_data']['timestamp']
+            }
+            contract_txs.push(tmp);
+
+          }else{
+            // console.log(tx_data[i]);
+
+          }          
+          
+        }
+      }
+      
+      
+
+      if(!res['success']){
+        console.log("Can't get transactions for this address");
+        break;
+      }
+
+      if(res['meta']['fingerprint'] && res['meta']['fingerprint'] !== 'undefined'){
+        continueToken = res['meta']['fingerprint'];
+      }else{
+        break;
+      }
+      
+    }
+    // console.log("Total Deposit");
+    // console.log(total_amount); 
+    total_amount = tronWeb.fromSun(total_amount);
+    $("#total_deposit").text(total_amount);
+    // console.log(contract_txs);
+    create_events_table(contract_txs);
+        
+  } catch (error) {
+    
+  }
+
+   
+
+}
+
 function get_events(address)
 {
+  // theUrl = 'https://api.shasta.trongrid.io/v1/contracts/' + contractAddress + '/events?event_name=NewDeposit';
   theUrl = 'https://api.trongrid.io/v1/contracts/' + contractAddress + '/events?event_name=NewDeposit';
 
   var xmlHttp = new XMLHttpRequest();
@@ -162,6 +246,7 @@ function get_events(address)
 
 function create_events_table(data,wallet_address)
 {
+  // console.log('Create deposit table');
   var myTableDiv = document.getElementById("events_table");
   while (myTableDiv.hasChildNodes()) {  
     myTableDiv.removeChild(myTableDiv.firstChild);
@@ -196,8 +281,8 @@ function create_events_table(data,wallet_address)
   total_deposit = 0;
 
   for (var i = 0; i < data.length; i++) {
-    if(data[i]['result']['user'] == wallet_address){
-      total_deposit += parseInt(data[i]['result']['amount']);
+    
+      total_deposit += parseInt(data[i]['amount']);
       var tr = document.createElement('TR');
       tableBody.appendChild(tr);    
 
@@ -206,21 +291,21 @@ function create_events_table(data,wallet_address)
       var td3 = document.createElement('TD');
       
       
-      td1.appendChild(document.createTextNode(tronWeb.fromSun(parseInt(data[i]['result']['amount']))));
+      td1.appendChild(document.createTextNode(tronWeb.fromSun(parseInt(data[i]['amount']))));
       tr.appendChild(td1);
-      time = format_time(parseInt(data[i]['result']['_time']) );
+      time = format_time(parseInt(data[i]['time']) );
       td2.appendChild(document.createTextNode(time));
       tr.appendChild(td2);
-      td3.appendChild(document.createTextNode(data[i]['transaction_id']));
+      td3.appendChild(document.createTextNode(data[i]['tx_id']));
       tr.appendChild(td3);
 
-    }
+    
     
     
   }
   myTableDiv.appendChild(table);
-  total_amount = tronWeb.fromSun(total_deposit);
-  $("#total_deposit").text(total_amount);
+  // total_amount = tronWeb.fromSun(total_deposit);
+  // $("#total_deposit").text(total_amount);
 }
 
 function format_time(timestamp)
@@ -228,7 +313,7 @@ function format_time(timestamp)
   let unix_timestamp = timestamp
 // Create a new JavaScript Date object based on the timestamp
 // multiplied by 1000 so that the argument is in milliseconds, not seconds.
-  var date = new Date(unix_timestamp * 1000);
+  var date = new Date(unix_timestamp );
   var day = date.getDate();
   var month = date.getMonth() + 1;
   var year = date.getFullYear();
